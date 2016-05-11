@@ -1,0 +1,72 @@
+---
+title: "PPSF"
+author: "john k"
+date: "May 11, 2016"
+output: html_document
+---
+Simple code illustrating processing steps for median price per square foot values using Durham County Tax Administration property records. 
+
+'''
+{PPSF <- read.csv("AMDTSL15_2.csv", header = TRUE, stringsAsFactors=FALSE, sep = ",")
+
+require(lubridate)
+require(reshape)
+require(dplyr)
+require(plyr)
+
+# format year and id fields, calculate per square foot values, make field for generating counts
+P <- mutate(PPSF, YR = substr(PPSF$AMDTSL,1,4), GEOID = as.character(GEOID10), YEAR = as.integer(YR), PPSF_H = PPSF$AMSLAM/PPSF$XXHAUN,PPSF_F = PPSF$AMSLAM/PPSF$AHFNAR, CT = 1)
+PP <- subset(P, select = -c(YR), YEAR > 2004)
+
+
+#creat adj factor using averaged annual housing cpi from here: http://data.bls.gov/cgi-bin/surveymost?cu
+housingcpi <- read.csv("HousingCPI_05_15.csv", header = TRUE, sep = ",")
+View(housingcpi)
+housingcpi$adj_factor <- housingcpi$cpi/housingcpi$cpi[housingcpi$YEAR == 2015]
+##join mls and annual cpi tables
+Pcpi <- merge(PP, housingcpi, by = "YEAR")
+
+##adjust list and sale values, heated sq ft and finished sq ft alternatives
+Padj <- mutate(Pcpi, SOLDADJ = (AMSLAM/adj_factor), ADJPPSF_H = (SOLDADJ/XXHAUN),ADJPPSF_F = (SOLDADJ/AHFNAR))
+
+#write raw table
+write.table(Padj, file = "tax_sales_20052015_2.csv", sep = ",", row.names = FALSE)
+
+## create table of sale counts for BGs for each year
+bgct <- cast(GEOID ~ YEAR, data = Padj, fun = sum, value = "CT", na.rm = TRUE)
+
+## create table of sale counts for neighborhoods for each year
+nhct <- cast(name_1 ~ YEAR, data = Padj, fun = sum, value = "CT", na.rm = TRUE)##create table of median BG values for each year
+
+
+# create table of median values for blockgroups
+bgmed <- cast(GEOID ~ YEAR, data = Padj, fun = median, value = "ADJPPSF_H", na.rm = TRUE)
+
+# create table of median values for neighborhoods
+nhmed <- cast(name_1 ~ YEAR, data = Padj, fun = median, value = "ADJPPSF_H", na.rm = TRUE)
+
+# create csvs
+  write.table(nhmed, file = "nhmed_pricepersquareft_tax20052015.csv", sep = ",", col.names = NA)
+  write.table(bgmed, file = "bgmed_pricepersquareft_tax20052015.csv", sep = ",", row.names = FALSE)
+
+#combine counts and medians
+  combo_bg <- merge(bgmed, bgct, by = "GEOID")
+  combo_nh <- merge(nhmed, nhct, by = "name_1")
+  
+  
+##County medians
+P2 <- select(Padj, YEAR, AMSLAM, PPSF_H, SOLDADJ, cpi, adj_factor, ADJPPSF_H)
+head(P2)
+
+comed_1 <- ddply(P2,~YEAR,summarise,adj_med_ppsf=median(ADJPPSF_H))
+
+comed_2 <- ddply(P2,~YEAR,summarise,median=median(AMSLAM)) 
+
+comed_3 <- ddply(P2,~YEAR,summarise,med_ppsf=median(PPSF_H)) 
+
+# table of combined price per square foot in Durham County 2005-2015 with cpi-adjusted same 
+county_medians <- merge(comed_3, comed_1, by="YEAR")
+county_medians_wcpi <- merge(county_medians, housingcpi, by="YEAR")
+write.table(county_medians_wcpi, file = "DurhamCounty_MedianPricePerSqFt_AllResidential_2005_2015.csv", sep =",", row.names= FALSE)
+}
+'''
