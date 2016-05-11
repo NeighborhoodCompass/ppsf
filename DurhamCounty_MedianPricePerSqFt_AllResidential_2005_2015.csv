@@ -12,3 +12,5 @@ YEAR,med_ppsf,adj_med_ppsf,cpi,adj_factor
 2015,107.0954907,107.0954907,237.4,1
 ,,,,
 Source: Durham County Tax Administration 2015 property records,,,,
+R script for processing can be found here: ,,,,
+https://github.com/NeighborhoodCompass/ppsf,,,,
