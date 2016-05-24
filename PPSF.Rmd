@@ -46,8 +46,8 @@ bgmed <- cast(GEOID ~ YEAR, data = Padj, fun = median, value = "ADJPPSF_H", na.r
 nhmed <- cast(name_1 ~ YEAR, data = Padj, fun = median, value = "ADJPPSF_H", na.rm = TRUE)
 
 # create csvs
-  write.table(nhmed, file = "nhmed_pricepersquareft_tax20052015.csv", sep = ",", col.names = NA)
-  write.table(bgmed, file = "bgmed_pricepersquareft_tax20052015.csv", sep = ",", row.names = FALSE)
+  write.table(nhmed, file = "nhmed_cpi2015_pricepersquareft_tax20052015.csv", sep = ",", col.names = NA)
+  write.table(bgmed, file = "bgmed_cpi2015_pricepersquareft_tax20052015.csv", sep = ",", row.names = FALSE)
 
 #combine counts and medians
   combo_bg <- merge(bgmed, bgct, by = "GEOID")
