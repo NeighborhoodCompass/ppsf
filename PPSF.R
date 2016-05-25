@@ -40,12 +40,14 @@ colnames(bgmed) <- c("id","y_2005","y_2006","y_2007","y_2008","y_2009","y_2010",
 # create table of median values for neighborhoods
 nhmed <- cast(name_1 ~ YEAR, data = Padj, fun = median, value = "ADJPPSF_H", na.rm = TRUE)
 # create csvs
-  write.table(nhmed, file = "nhmed_pricepersquareft_tax20052015.csv", sep = ",", col.names = NA)
-  write.table(bgmed, file = "bgmed_pricepersquareft_tax20052015.csv", sep = ",", row.names = FALSE)
+medppsf <- merge(bg, bgmed, by = "id", all=TRUE) 
+write.table(medppsf, file = "bgmed_pricepersquareft_tax20052015.csv", sep = ",", row.names = FALSE)
+write.table(nhmed, file = "nhmed_pricepersquareft_tax20052015.csv", sep = ",", col.names = NA)
+  
 
-  #combine counts and medians
-  combo_bg <- merge(bgmed, bgct, by = "GEOID")
-  combo_nh <- merge(nhmed, nhct, by = "name_1")
+#combine counts and medians
+combo_bg <- merge(bgmed, bgct, by = "GEOID")
+combo_nh <- merge(nhmed, nhct, by = "name_1")
   
 # create table of median sales values for blockgroups
 bgmedsale <- cast(GEOID ~ YEAR, data = Padj, fun = median, value = "SOLDADJ", na.rm = TRUE)
